@@ -48,6 +48,83 @@ class Auction:
 
         return price 
 
+class AutomatedAuction(Auction):
+    def __init__(self, auction_file, criterion=1):
+        self.players = defaultdict(dict) # {name : { bids: {id : bidprice}, budget: amount, clicks: num, impressions: num) } }
+        self.bidders = None
+        return super().__init__(auction_file, criterion=criterion)
+
+    def add_player(self, name, budget, bidfile):
+        if name not in self.players:
+            self.players[name]['budget'] = budget
+            self.players[name]['cost'] = 0.0
+            self.players[name]['bids'] = pd.read_csv(bidfile, index_col='bidid')
+            self.players[name]['clicks'] = 0
+            self.players[name]['imps'] = 0
+        else:
+            raise ValueError(f'{name} has already been added')
+
+    def run_auction(self):
+        self._setup_bidders()
+
+        for row in self.next_item():
+            for bidder in self.bidders:
+                bid = self._get_bid(bidder, self.current_item)
+                if bid:
+                    self.bid(bidder, bid)
+
+            winner, payprice = self.winner()
+            self._update_player(winner, payprice, row['click'])
+
+    def _setup_bidders(self):
+        self.bidders = set([x for x in self.players.keys()])
+
+    def _get_bid(self, player, bidid):
+        if player not in self.players:
+            raise ValueError(f'{player} is not found within auction')
+        try:
+            return self.players[player]['bids'].loc[bidid]['bidprice']
+        except KeyError as exp:
+            return None
+
+    def stats(self, player):
+        clicks = self.players[player]['clicks']
+        imps = self.players[player]['imps']
+        cost = self.players[player]['cost']
+        stats = {
+            'clicks': clicks,
+            'imps': imps,
+            'ctr': float(clicks) / imps if imps != 0 else 0,
+            'cpc': float(cost) / clicks if clicks != 0 else 99999,
+            'cost': cost
+        }
+        return stats
+
+    def _update_player(self, winner, payprice, click):
+        self.players[winner]['imps'] += 1
+        self.players[winner]['clicks'] += click
+        self.players[winner]['budget'] -= payprice
+        self.players[winner]['cost'] += payprice
+        if self.players[winner]['budget'] <= 0:
+            self.bidders.remove(winner)
+
+class ConstantAuction(AutomatedAuction):
+    def __init__(self, auction_file, criterion=1):
+        return super().__init__(auction_file, criterion=criterion)
+
+    def add_player(self, name, budget, constant):
+        if name not in self.players:
+            self.players[name]['budget'] = budget
+            self.players[name]['cost'] = 0.0
+            self.players[name]['clicks'] = 0
+            self.players[name]['imps'] = 0
+            self.players[name]['bidamt'] = constant
+        else:
+            raise ValueError(f'{name} has already been added')
+
+    def _get_bid(self, player, bidid):
+        return self.players[player]['bidamt']
+
 def main(args):
     pass
 
