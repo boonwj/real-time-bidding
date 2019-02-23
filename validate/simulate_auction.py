@@ -68,13 +68,18 @@ class AutomatedAuction(Auction):
         self._setup_bidders()
 
         for row in self.next_item():
+            if not self.bidders:
+                break
+
             for bidder in self.bidders:
                 bid = self._get_bid(bidder, self.current_item)
                 if bid:
                     self.bid(bidder, bid)
 
-            winner, payprice = self.winner()
-            self._update_player(winner, payprice, row['click'])
+            win_details = self.winner()
+            if win_details:
+                winner, payprice = win_details
+                self._update_player(winner, payprice, row['click'])
 
     def _setup_bidders(self):
         self.bidders = set([x for x in self.players.keys()])
@@ -126,19 +131,29 @@ class ConstantAuction(AutomatedAuction):
         return self.players[player]['bidamt']
 
 def main(args):
-    pass
+    if args.constant:
+        auction = ConstantAuction(args.valfile)
+        auction.add_player('you', args.budget, args.constant)
+    elif args.bidfile:
+        auction = AutomatedAuction(args.valfile)
+        auction.add_player('you', args.bidfile, args.constant)
+        # TODO: Add loading of other players
+    auction.run_auction()
+    print(auction.stats('you'))
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Validate auction results')
-    parser.add_argument('bidfile', type=str, 
-                        help='Bid file')
     parser.add_argument('valfile', type=str, 
                         help='CSV file of validation data')
+    parser.add_argument('-c', '--constant', type=int, 
+                        help='Constant bid value')
+    parser.add_argument('-f', '--bidfile', type=str, 
+                        help='Your bid file')
     parser.add_argument('-d', '--biddir', type=str, required=False, 
                         help='Directory of other bids')
     parser.add_argument('-b', '--budget', type=int, default=6250, 
                         help='Total budget to spend')
-    parser.add_argument('-c', '--criterion', type=int, default=1, choices=(1, 2),
+    parser.add_argument('-t', '--criterion', type=int, default=1, choices=(1, 2),
                         help='(1) Second price or (2) Second price & other bids')
     args = parser.parse_args()
     return args
