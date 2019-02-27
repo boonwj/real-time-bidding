@@ -136,7 +136,7 @@ def main(args):
         auction.add_player('you', args.budget, args.constant)
     elif args.bidfile:
         auction = AutomatedAuction(args.valfile)
-        auction.add_player('you', args.bidfile, args.constant)
+        auction.add_player('you', args.budget, args.bidfile)
         # TODO: Add loading of other players
     auction.run_auction()
     print(auction.stats('you'))
