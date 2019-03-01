@@ -3,6 +3,8 @@
 import pandas as pd
 import sys
 import argparse 
+import glob
+import os
 
 from collections import defaultdict
 
@@ -131,6 +133,7 @@ class ConstantAuction(AutomatedAuction):
         return self.players[player]['bidamt']
 
 def main(args):
+    players = ['you']
     if args.constant:
         auction = ConstantAuction(args.valfile)
         auction.add_player('you', args.budget, args.constant)
@@ -138,8 +141,15 @@ def main(args):
         auction = AutomatedAuction(args.valfile)
         auction.add_player('you', args.budget, args.bidfile)
         # TODO: Add loading of other players
+    if args.biddir:
+        for bidf in glob.glob(os.path.join(args.biddir, '*.csv.*')):
+            name = os.path.basename(bidf)
+            players.append(name)
+            auction.add_player(name, args.budget, args.bidfile)
     auction.run_auction()
-    print(auction.stats('you'))
+    
+    for player in players:
+        print(f'name: {player}, stats: {auction.stats(player)}')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Validate auction results')
