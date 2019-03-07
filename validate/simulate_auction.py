@@ -145,7 +145,7 @@ def main(args):
         for bidf in glob.glob(os.path.join(args.biddir, '*.csv.*')):
             name = os.path.basename(bidf)
             players.append(name)
-            auction.add_player(name, args.budget, args.bidfile)
+            auction.add_player(name, args.budget, bidf)
     auction.run_auction()
     
     for player in players:
