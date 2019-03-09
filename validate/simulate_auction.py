@@ -5,6 +5,7 @@ import sys
 import argparse 
 import glob
 import os
+import logging 
 
 from collections import defaultdict
 
@@ -15,12 +16,15 @@ class Auction:
         self.current_item = None
         self.payprice = None
         self.bids = []
+        self.item_num = 0
+        logging.info(f'Auction file: {auction_file}, Criterion: {criterion}')
 
     def next_item(self):
         for i, row in self.auction_items.iterrows():
             self.current_item = row['bidid']
             self.payprice = row['payprice']
             self.bids = []
+            self.item_num = i+1
             yield row.to_dict()
 
     def bid(self, name, price):
@@ -63,11 +67,13 @@ class AutomatedAuction(Auction):
             self.players[name]['bids'] = pd.read_csv(bidfile, index_col='bidid')
             self.players[name]['clicks'] = 0
             self.players[name]['imps'] = 0
+            self.players[name]['out_round'] = 0
         else:
             raise ValueError(f'{name} has already been added')
 
     def run_auction(self):
         self._setup_bidders()
+        logging.info(f'Players: {len(self.players)}')
 
         for row in self.next_item():
             if not self.bidders:
@@ -81,6 +87,7 @@ class AutomatedAuction(Auction):
             win_details = self.winner()
             if win_details:
                 winner, payprice = win_details
+                logging.info(f'{row["bidid"]},{winner},{payprice}')
                 self._update_player(winner, payprice, row['click'])
 
     def _setup_bidders(self):
@@ -98,12 +105,15 @@ class AutomatedAuction(Auction):
         clicks = self.players[player]['clicks']
         imps = self.players[player]['imps']
         cost = self.players[player]['cost']
+        out_round = self.players[player]['out_round']
         stats = {
             'clicks': clicks,
             'imps': imps,
             'ctr': float(clicks) / imps if imps != 0 else 0,
             'cpc': float(cost) / clicks if clicks != 0 else 99999,
-            'cost': cost
+            'cost': cost,
+            'out_round': out_round
+
         }
         return stats
 
@@ -113,6 +123,9 @@ class AutomatedAuction(Auction):
         self.players[winner]['budget'] -= payprice
         self.players[winner]['cost'] += payprice
         if self.players[winner]['budget'] <= 0:
+            self.players[winner]['out_round'] = self.item_num
+            logging.info(f'OOB,{winner},0')
+            print(f'OOB: {winner} is out on item {self.item_num}')
             self.bidders.remove(winner)
 
 class ConstantAuction(AutomatedAuction):
@@ -133,23 +146,34 @@ class ConstantAuction(AutomatedAuction):
         return self.players[player]['bidamt']
 
 def main(args):
-    players = ['you']
+    players = []
+    bidfiles = []
     if args.constant:
-        auction = ConstantAuction(args.valfile)
+        auction = ConstantAuction(args.valfile, args.criterion)
         auction.add_player('you', args.budget, args.constant)
-    elif args.bidfile:
-        auction = AutomatedAuction(args.valfile)
-        auction.add_player('you', args.budget, args.bidfile)
-        # TODO: Add loading of other players
+    else:
+        auction = AutomatedAuction(args.valfile, args.criterion)
+
+    if args.bidfile:
+        bidfiles.extend(args.bidfile)
+
     if args.biddir:
-        for bidf in glob.glob(os.path.join(args.biddir, '*.csv.*')):
-            name = os.path.basename(bidf)
-            players.append(name)
-            auction.add_player(name, args.budget, bidf)
+        for f in glob.glob(os.path.join(args.biddir, '*.csv')):
+            bidfiles.append(f)
+
+    for bidfile in bidfiles:
+        name = os.path.basename(bidfile)
+        players.append(name)
+        auction.add_player(name, args.budget, bidfile)
+        print(f'Added: {name}, {bidfile}')
+
+    print(f'Running auction, criterion: {args.criterion}, players: {players}')
     auction.run_auction()
     
     for player in players:
-        print(f'name: {player}, stats: {auction.stats(player)}')
+        result = f'name: {player}, stats: {auction.stats(player)}'
+        logging.info(result)
+        print(result)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Validate auction results')
@@ -157,7 +181,7 @@ def parse_args():
                         help='CSV file of validation data')
     parser.add_argument('-c', '--constant', type=int, 
                         help='Constant bid value')
-    parser.add_argument('-f', '--bidfile', type=str, 
+    parser.add_argument('-f', '--bidfile', type=str, action='append',
                         help='Your bid file')
     parser.add_argument('-d', '--biddir', type=str, required=False, 
                         help='Directory of other bids')
@@ -169,4 +193,5 @@ def parse_args():
     return args
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='auction.log', level=logging.INFO)
     main(parse_args())
