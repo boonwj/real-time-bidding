@@ -173,9 +173,8 @@ def main(args):
     
     results = {}
     for player in players:
-        results[player] = auction.stats{player}
-        logging.info(results)
-        print(results)
+        results[player] = auction.stats(player)
+    print(results)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Validate auction results')
