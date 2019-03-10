@@ -2,6 +2,7 @@
 
 import pandas as pd
 import sys
+import csv 
 import argparse 
 import glob
 import os
@@ -25,7 +26,7 @@ class Auction:
             self.payprice = row['payprice']
             self.bids = []
             self.item_num = i+1
-            yield row.to_dict()
+            yield i+1, row.to_dict()
 
     def bid(self, name, price):
         if name not in self.bids:
@@ -64,10 +65,14 @@ class AutomatedAuction(Auction):
         if name not in self.players:
             self.players[name]['budget'] = budget
             self.players[name]['cost'] = 0.0
-            self.players[name]['bids'] = pd.read_csv(bidfile, index_col='bidid')
             self.players[name]['clicks'] = 0
             self.players[name]['imps'] = 0
             self.players[name]['out_round'] = 0
+            bids = {}
+            with open(bidfile) as csvf:
+                for row in csv.DictReader(csvf):
+                    bids[row['bidid']] = float(row['bidprice'])
+            self.players[name]['bids'] = bids
         else:
             raise ValueError(f'{name} has already been added')
 
@@ -75,7 +80,7 @@ class AutomatedAuction(Auction):
         self._setup_bidders()
         logging.info(f'Players: {len(self.players)}')
 
-        for row in self.next_item():
+        for item, row in self.next_item():
             if not self.bidders:
                 break
 
@@ -97,7 +102,7 @@ class AutomatedAuction(Auction):
         if player not in self.players:
             raise ValueError(f'{player} is not found within auction')
         try:
-            return self.players[player]['bids'].loc[bidid]['bidprice']
+            return self.players[player]['bids'][bidid]
         except KeyError as exp:
             return None
 
@@ -113,7 +118,6 @@ class AutomatedAuction(Auction):
             'cpc': float(cost) / clicks if clicks != 0 else 99999,
             'cost': cost,
             'out_round': out_round
-
         }
         return stats
 
@@ -170,10 +174,11 @@ def main(args):
     print(f'Running auction, criterion: {args.criterion}, players: {players}')
     auction.run_auction()
     
+    results = {}
     for player in players:
-        result = f'name: {player}, stats: {auction.stats(player)}'
-        logging.info(result)
-        print(result)
+        results[player] = auction.stats{player}
+        logging.info(results)
+        print(results)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Validate auction results')
