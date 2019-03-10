@@ -18,7 +18,6 @@ class Auction:
         self.payprice = None
         self.bids = []
         self.item_num = 0
-        logging.info(f'Auction file: {auction_file}, Criterion: {criterion}')
 
     def next_item(self):
         for i, row in self.auction_items.iterrows():
@@ -92,7 +91,6 @@ class AutomatedAuction(Auction):
             win_details = self.winner()
             if win_details:
                 winner, payprice = win_details
-                logging.info(f'{row["bidid"]},{winner},{payprice}')
                 self._update_player(winner, payprice, row['click'])
 
     def _setup_bidders(self):
@@ -128,8 +126,7 @@ class AutomatedAuction(Auction):
         self.players[winner]['cost'] += payprice
         if self.players[winner]['budget'] <= 0:
             self.players[winner]['out_round'] = self.item_num
-            logging.info(f'OOB,{winner},0')
-            print(f'OOB: {winner} is out on item {self.item_num}')
+            logging.info(f'OOB: {winner} is out on item {self.item_num}')
             self.bidders.remove(winner)
 
 class ConstantAuction(AutomatedAuction):
@@ -169,9 +166,9 @@ def main(args):
         name = os.path.basename(bidfile)
         players.append(name)
         auction.add_player(name, args.budget, bidfile)
-        print(f'Added: {name}, {bidfile}')
+        logging.info(f'Added: {name}, {bidfile}')
 
-    print(f'Running auction, criterion: {args.criterion}, players: {players}')
+    logging.info(f'Running auction: file: {args.valfile}, criterion: {args.criterion}, players: {players}')
     auction.run_auction()
     
     results = {}
@@ -198,5 +195,5 @@ def parse_args():
     return args
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='auction.log', level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     main(parse_args())
