@@ -1,6 +1,5 @@
 #!/usr/env/python3
 
-import pandas as pd
 import sys
 import csv 
 import argparse 
@@ -12,20 +11,23 @@ from collections import defaultdict
 
 class Auction:
     def __init__(self, auction_file, criterion=1):
-        self.auction_items = pd.read_csv(auction_file)
+        self.auction_file = auction_file
         self.criterion = criterion
         self.current_item = None
         self.payprice = None
+        self.click = 0
         self.bids = []
         self.item_num = 0
 
     def next_item(self):
-        for i, row in self.auction_items.iterrows():
-            self.current_item = row['bidid']
-            self.payprice = row['payprice']
-            self.bids = []
-            self.item_num = i+1
-            yield i+1, row.to_dict()
+        with open(self.auction_file) as csv_f:
+            for i, row in enumerate(csv.DictReader(csv_f), start=1):
+                self.current_item = row['bidid']
+                self.payprice = float(row['payprice'])
+                self.bids = []
+                self.click = int(row['click'])
+                self.item_num = i
+                yield i
 
     def bid(self, name, price):
         if name not in self.bids:
@@ -79,7 +81,7 @@ class AutomatedAuction(Auction):
         self._setup_bidders()
         logging.info(f'Players: {len(self.players)}')
 
-        for item, row in self.next_item():
+        for _ in self.next_item():
             if not self.bidders:
                 break
 
@@ -91,7 +93,7 @@ class AutomatedAuction(Auction):
             win_details = self.winner()
             if win_details:
                 winner, payprice = win_details
-                self._update_player(winner, payprice, row['click'])
+                self._update_player(winner, payprice)
 
     def _setup_bidders(self):
         self.bidders = set([x for x in self.players.keys()])
@@ -119,9 +121,9 @@ class AutomatedAuction(Auction):
         }
         return stats
 
-    def _update_player(self, winner, payprice, click):
+    def _update_player(self, winner, payprice):
         self.players[winner]['imps'] += 1
-        self.players[winner]['clicks'] += click
+        self.players[winner]['clicks'] += self.click
         self.players[winner]['budget'] -= payprice
         self.players[winner]['cost'] += payprice
         if self.players[winner]['budget'] <= 0:
@@ -159,7 +161,7 @@ def main(args):
         bidfiles.extend(args.bidfile)
 
     if args.biddir:
-        for f in glob.glob(os.path.join(args.biddir, '*.csv')):
+        for f in glob.glob(os.path.join(args.biddir, '*.csv*')):
             bidfiles.append(f)
 
     for bidfile in bidfiles:
