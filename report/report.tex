@@ -9,6 +9,8 @@
 \usepackage{amsmath}
 \usepackage{textcomp}
 \usepackage{subfig}
+\usepackage{hyperref}
+\usepackage{xcolor}
  
 \graphicspath{ {./images/} }
 
@@ -53,6 +55,8 @@ Real-time bidding (RTB) is the auctioning of online advertising impressions that
 
 In this project, we explore different bidding strategies in both single and multi-agent environments, with the objective of maximising clicks from a set of advertising impressions. We explored bidding strategies in a single agent environment, evaluating basic strategies such as constant and random bidding, before implementing more efficient strategies that use click-through-rate classifiers such as linear and non-linear bidding. Finally, we put everything together and implement a bidding strategy that will be useful in a multi-agent environment.
 
+The source code is hosted here: \href{https://github.com/boonwj/real-time-bidding}{\color{blue}{boonwj/real-time-bidding}}
+
 \end{abstract}
 
 \section{Introduction}
@@ -61,13 +65,13 @@ The advancement of the internet has enabled marketing to be targeted and specifi
 
 The RTB process unfolds in three main steps \cite{yuan_meas_2013}, first, the publisher provides its inventory to an ad exchange; who is responsible for holding an auction. During which the DSPs, on behalf of the advertisers will place a bid on the impressions. This bid value is usually dependant on how much advertisers value the impression. After the bidding is completed, the winner is chosen and the winner's ad is served on the publisher's website. 
 
-Even though a second priced auction encourages users to bid their true value, in the real-world there are many other factors that prevent one from doing so, such as the (ir)rationality of rival bidders and an advertiser's budget constraints. Therefore, there has been multiple research looking into the best ways to optimising bidding in RTB \cite{yuan_rev_2014, zhang_real-time_2014}.
+Even though a second priced auction encourages users to bid their true value, in the real-world there are other factors that prevent one from doing so, such as the (ir)rationality of rival bidders and an advertiser's budget constraints. Therefore, there have been multiple research into the best ways of optimising bidding in RTB \cite{yuan_rev_2014, zhang_real-time_2014}.
 
 \textbf{Objective:}
 The aim of this paper is to develop bidding strategies to maximise the number of clicked impressions within a dataset of impressions. We implement and evaluate different strategies in this paper, from basic strategies such as constant and random bidding to more efficient strategies that uses click-through-rate classifiers such as linear and non-linear bidding.
 
 \textbf{Single-Agent Environment:}
-Evaluating both basic and advanced strategies in a single-agent environment, we found that more advanced strategies using Click-Through-Rate (CTR) estimators consistently outperforms the basic strategies. With a budget of 6,250 fen, our best constant bidding strategy achieved around 68 clicks in 146,864 impression whereas our best advanced strategies achieved 160 clicks in 141,861 impressions.
+Evaluating both basic and advanced strategies in a single-agent environment, we found that more advanced strategies using Click-Through-Rate (CTR) estimators consistently outperforms basic strategies. With a budget of 6,250 fen, our best basic strategy achieved around 68 clicks in 146,864 impression whereas our best advanced strategies achieved 160 clicks in 141,861 impressions.
 
 \textbf{Multi-Agent Environment:}
 In a multi-agent environment with homogeneous agents, it was found that as the number of agents increase, each agent's average impressions and clicks drops. In our tests with 50 to 100 agents, using our single-agent optimal random bidding range, none of the agents were able to finish their budget. Hence, in a homogeneous multi-agent environment with limited impressions to cover, it is mutually beneficial to bid in a such that more impressions could be shared among all agents. 
@@ -90,7 +94,7 @@ There have also been other studies that discussed how to coordinate agents using
 
 \section{Dataset}
 \subsection{Data Format}
-In this study, we were provided historical ad impressions data from the iPinYou dataset. In total we are provided with 3 sets of data (training, validation and testing). The training and validation data set is meant for our analysis and training, whereas the testing is where we will be applying our bidding strategies on. 
+In this study, we were provided with historical ad impressions data from the iPinYou dataset. In total we are provided with 3 sets of data (training, validation and testing). The training and validation data set is meant for our analysis and training, whereas the testing is where we will be applying our bidding strategies on. 
 
 Table \ref{table:data-format} details the key fields within them. The data contains many features to describe every impression, ranging from users (e.g. usertag), advertisers (e.g. advertiser Id), publisher (e.g. domain, url, urlid, slotid, slotwidth, slotheigh, slotvisibility, slotformat) and context (e.g. weekday, hour, city, region, browser and OS). All these information are provided to advertisers so they can determine how valuable an impression is to them before they bid.
 
@@ -155,7 +159,7 @@ For a more detailed description of some columns can be found in the iPinYou benc
 \subsection{Basic Statistics}
 A brief analysis of the data is first done on our dataset to get basic information as shown in table \ref{table:data-analysis}. For the exploration of the data, we turn to the training dataset which contains the most data with 2,430,981 impressions. Within it, all money related fields such as bid price, paying price and floor price are in the currency CNY fen which follows the cost-per-mille (CPM) pricing model.
 
-We also looked into user feedback information as seen in Figure \ref{fig:user-feedback} and in Figure \ref{fig:click-payprice-dist} we see how much click impressions generally cost. We have also identified the following key observations from the data.
+We also looked into user feedback information as seen in Figure \ref{fig:user-feedback} and in Figure \ref{fig:click-payprice-dist} we see how much are click impressions generally cost. We have also identified the following key observations from the data.
 
 \begin{itemize}
     \item Number of clicks and therefore CTR is extremely low (1,793 clicks, 0.074\% CTR)
