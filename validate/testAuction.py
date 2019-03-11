@@ -26,10 +26,9 @@ class TestAuction(unittest.TestCase):
 
     def test_auction_item_data(self):
         data = next(self.auction.next_item())
-        self.assertEqual(0, data['click'])
-        self.assertEqual(4, data['weekday'])
-        self.assertEqual('bbcb813b6166538503d8b33a5602d7d72f6019dc', data['bidid'])
-        self.assertEqual(300, data['bidprice'])
+        self.assertEqual(0, self.auction.click)
+        self.assertEqual('bbcb813b6166538503d8b33a5602d7d72f6019dc', self.auction.current_item)
+        self.assertEqual(23, self.auction.payprice)
 
     def test_bids(self):
         self.auction.bid('player1', 100)
@@ -72,7 +71,8 @@ class TestAutomatedAuction(unittest.TestCase):
         self.assertEqual(0, self.auto_auction.players['p1']['clicks'])
         self.assertEqual(0, self.auto_auction.players['p1']['imps'])
         self.assertEqual(0, self.auto_auction.players['p1']['cost'])
-        pd.testing.assert_frame_equal(exp_df, self.auto_auction.players['p1']['bids'])
+        # Implementation has changed away from dataframes
+        # pd.testing.assert_frame_equal(exp_df, self.auto_auction.players['p1']['bids'])
     
     def test_get_player_bids(self):
         exp_df = pd.read_csv(self.p1_bids, index_col='bidid')
@@ -85,19 +85,19 @@ class TestAutomatedAuction(unittest.TestCase):
         exp_df = pd.read_csv(self.p1_bids, index_col='bidid')
         self.auto_auction.add_player('p1', 10, self.p1_bids) 
         self.auto_auction._setup_bidders()
-        self.auto_auction._update_player('p1', 9, 1)
+        self.auto_auction._update_player('p1', 9)
         self.assertEqual(set(['p1']), self.auto_auction.bidders)
-        self.auto_auction._update_player('p1', 0.2, 1)
+        self.auto_auction._update_player('p1', 0.2)
         self.assertEqual(set(['p1']), self.auto_auction.bidders)
-        self.auto_auction._update_player('p1', 0.9, 0)
+        self.auto_auction._update_player('p1', 0.90)
         self.assertEqual(set(), self.auto_auction.bidders)
 
         # result from bidding
-        self.assertEqual(2, self.auto_auction.stats('p1')['clicks'])
+        self.assertEqual(0, self.auto_auction.stats('p1')['clicks'])
         self.assertEqual(3, self.auto_auction.stats('p1')['imps'])
         self.assertEqual(10.1, self.auto_auction.stats('p1')['cost'])
-        self.assertAlmostEqual(10.1/2, self.auto_auction.stats('p1')['cpc'])
-        self.assertAlmostEqual(2/3, self.auto_auction.stats('p1')['ctr'])
+        self.assertAlmostEqual(99999, self.auto_auction.stats('p1')['cpc'])
+        self.assertAlmostEqual(0, self.auto_auction.stats('p1')['ctr'])
 
     def test_run_auction(self):
         exp_df = pd.read_csv(self.p1_bids, index_col='bidid')

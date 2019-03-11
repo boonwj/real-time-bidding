@@ -1,5 +1,3 @@
-#!/usr/env/python3
-
 import sys
 import csv 
 import argparse 
@@ -142,6 +140,7 @@ class ConstantAuction(AutomatedAuction):
             self.players[name]['clicks'] = 0
             self.players[name]['imps'] = 0
             self.players[name]['bidamt'] = constant
+            self.players[name]['out_round'] = 0
         else:
             raise ValueError(f'{name} has already been added')
 
