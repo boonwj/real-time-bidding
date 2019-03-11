@@ -507,7 +507,7 @@ A supplementary strategy we then considered was to conserve our budget early by 
             100\% & 86 & 6,148 & 0.0139 & 72.69 & 6,251.56 & 269,478 \\
             90\% / 110\% & 84 & 6,128 &0.0137 &74.40 & 6,250.06 &279,027 \\
             75\% / 125\% & 82 & 6,541 &0.0125 &76.22 & 6,250.09 &300,585 \\
-            50\% / 150\% & 79 & 7,723 &0.010229 &76.81 & 6,068.48 &0 \\
+            50\% / 150\% & 79 & 7,723 &0.0102 &76.81 & 6,068.48 &0 \\
 			\hline
 		\end{tabular}}
 \end{table}
@@ -517,14 +517,14 @@ A supplementary strategy we then considered was to conserve our budget early by 
 In our study, we only explored 2 CTR classifiers, LR and GBRT and we focused on feature engineering instead of optimising the classifiers' parameters. Choosing better classifiers or fine tuning existing ones should create a more accurate CTR estimator such that the bidding strategies will be more effective. 
 
 \textbf{Explore other bidding strategies:}
-We only managed to explore the non-linear ORTB strategy in our study, however there are other strategies, such as lift-based bidding\cite{xu_lift-based_2015} that was not evaluated. Those strategies could have been possibly be more efficient than the one that was used in our study. With time we would explore further to make a more informed decision on the non-linear strategies to use.
+We only managed to explore the non-linear ORTB strategy in our study, however there are other strategies, such as lift-based bidding\cite{xu_lift-based_2015} that was not evaluated. Those strategies could have possibly been more efficient than the one that was used in our study. With time we would explore further to make a more informed decision on the non-linear strategies to use.
 
 \textbf{Multi-agent strategy:}
-In our multi-agent strategy, we created bidding strategies that was more effective against what we have discovered so far. It did not consider changes in strategies that were implemented by other agents. A better way would have been to create a Stochastic game for multi-agent reinforced learning \cite{jin_multiagent_2018} and use the algorithms to create the ideal bidding strategy. 
+In our multi-agent strategy, we created bidding strategies that were more effective against what we have discovered so far. It did not consider changes in strategies that were implemented by other agents. A better way would have been to create a Stochastic game for multi-agent reinforced learning \cite{jin_multiagent_2018} and use the algorithms to create the ideal bidding strategy. 
 
 \section{Conclusion}
 % the conclusion section concludes your report and point out the potential direction to improve your report (e.g., if you have time, you will do...).
-In this study we explored multiple bidding strategies in both single and multi-agent environments. In the single agent environment, we found that basic bidding strategies produced only limited results as compared to more advanced strategies that uses a CTR estimator. This is seen where our best performing basic bidding strategy only produced 77 clicks as compared to the 160 from our advanced bidding strategy. In the multi-agent environment the strategies that previously worked in a single environment will need to be adapted to handle other agents. We modified our original non-linear ORTB 1 bidding strategy to be more sensitive to handle bids from other agents and achieved the best performing result when compared with 30 other agents in our experimentation. 
+In this study, we explored multiple bidding strategies in both single and multi-agent environments. In the single agent environment, we found that basic bidding strategies produced only limited results as compared to more advanced strategies that use a CTR estimator. This is seen where our best performing basic bidding strategy only produced 77 clicks as compared to the 160 from our advanced bidding strategy. In the multi-agent environment the strategies that previously worked in a single environment will need to be adapted to handle other agents. We modified our original non-linear ORTB 1 bidding strategy to be more sensitive to handle bids from other agents and achieved the best performing result when compared with 30 other agents in our experimentation. 
 
 \clearpage
 \newpage
